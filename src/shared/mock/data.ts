@@ -1,0 +1,80 @@
+export interface warehouseType  {
+    id: number,
+    name: string,
+    itemDescription: string,
+    date: string,
+    notes: string,
+}
+
+export const warehouseData: warehouseType[] = [
+  {
+    id: 1,
+    name: "Frozen",
+    itemDescription: "asdad",
+    date: "2025-03-07T00:00:00+05:00",
+    notes: "asda",
+  },
+  {
+    id: 2,
+    name: "Granite",
+    itemDescription: "asdad",
+    date: "2025-03-07T00:00:00+05:00",
+    notes: "asda",
+  },
+  {
+    id: 3,
+    name: "Steel",
+    itemDescription: "asdad",
+    date: "2025-03-07T00:00:00+05:00",
+    notes: "asda",
+  },
+  {
+    id: 4,
+    name: "Cotton",
+    itemDescription: "asdad",
+    date: "2025-03-07T00:00:00+05:00",
+    notes: "asda",
+  },
+  {
+    id: 5,
+    name: "Soft",
+    itemDescription: "asdad",
+    date: "2025-03-07T00:00:00+05:00",
+    notes: "asda",
+  },
+  {
+    id: 6,
+    name: "Fresh",
+    itemDescription: "asdad",
+    date: "2025-03-07T00:00:00+05:00",
+    notes: "asda",
+  },
+  {
+    id: 7,
+    name: "Rubber",
+    itemDescription: "asdad",
+    date: "2025-03-07T00:00:00+05:00",
+    notes: "asda",
+  },
+  {
+    id: 8,
+    name: "Plastic",
+    itemDescription: "asdad",
+    date: "2025-03-07T00:00:00+05:00",
+    notes: "asda",
+  },
+  {
+    id: 9,
+    name: "Wooden",
+    itemDescription: "asdad",
+    date: "2025-03-07T00:00:00+05:00",
+    notes: "asda",
+  },
+  {
+    id: 10,
+    name: "Cotton",
+    itemDescription: "asdad",
+    date: "2025-03-07T00:00:00+05:00",
+    notes: "asda",
+  },
+];

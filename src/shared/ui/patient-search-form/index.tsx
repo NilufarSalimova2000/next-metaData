@@ -1,0 +1,205 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+  TextField,
+  MenuItem,
+  Select,
+  Button,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
+import {
+  useLazyGetCitizenByPNFLQuery,
+  useLazyGetLegalByINNQuery,
+} from "@/redux/services/lis/search-citizen-legal";
+import LegalForm from "../legal-form";
+import { CitizenForm } from "../citizen-form";
+import { CitizenType, CompanyType } from "@/shared/types/users";
+
+type Sex = "Erkak" | "Ayol";
+export type TCitizenForm = Omit<CitizenType, "sex"> & { sex: Sex };
+
+export const PatientSearchForm = ({
+  onFormUpdate,
+}: {
+  onFormUpdate: (values: CompanyType | TCitizenForm) => void;
+}) => {
+  const [searchType, setSearchType] = useState<"pnfl" | "inn" | "passport">(
+    "pnfl"
+  );
+  const [searchValue, setSearchValue] = useState("");
+
+  const [citizenFormVals, setCitizenFormVals] = useState<TCitizenForm>({
+    transaction_id: 0,
+    current_pinpp: "",
+    pinpps: [],
+    current_document: "",
+    documents: [],
+    surnamelat: "",
+    namelat: "",
+    patronymlat: "",
+    surnamecyr: "",
+    namecyr: "",
+    patronymcyr: "",
+    engsurname: "",
+    engname: "",
+    birth_date: "",
+    birthplace: "",
+    birthcountry: "",
+    birthcountryid: 0,
+    livestatus: 0,
+    nationality: "",
+    nationalityid: 0,
+    citizenship: "",
+    citizenshipid: 0,
+    sex: "Ayol",
+    photo: "",
+  });
+
+  const [legalformVals, setLegalformVals] = useState<CompanyType>({
+    name: "",
+    shortName: "",
+    tin: "",
+    oked: "",
+    registrationDate: "",
+    registrationNumber: "",
+    reregistrationDate: "",
+    status: 0,
+    statusUpdated: null,
+    taxStatus: null,
+    taxMode: 0,
+    vatNumber: 0,
+    vatRegistrationDate: null,
+  });
+
+  const [
+    fetchCitizen,
+    { data: citizenData, error: citizenError, isLoading: citizenLoading },
+  ] = useLazyGetCitizenByPNFLQuery();
+
+  const [
+    fetchLegal,
+    { data: legalData, error: legalError, isLoading: legalLoading },
+  ] = useLazyGetLegalByINNQuery();
+
+  const handleSearch = async () => {
+    if (isValidInput()) {
+      if (searchType === "pnfl") {
+        await fetchCitizen({ nnuzb: searchValue, photo: "Y" })
+          .unwrap()
+          .then(() => {})
+          .catch((err) => {
+            console.error("Error during fetching citizen data:", err);
+          });
+      } else if (searchType === "inn") {
+        await fetchLegal({ tin: searchValue })
+          .unwrap()
+          .then(() => {})
+          .catch((err) => {
+            console.error("Error during fetching legal data:", err);
+          });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (citizenData?.data?.length) {
+      const person = citizenData.data[0];
+      const newValues: TCitizenForm = {
+        ...citizenFormVals,
+        surnamelat: person.surnamelat || "",
+        namelat: person.namelat || "",
+        patronymlat: person.patronymlat || "",
+        birth_date: person.birth_date || "",
+        nationality: person.nationality || "",
+        sex: person.sex === 1 ? "Erkak" : "Ayol",
+        photo: person.photo || "",
+        current_pinpp: person.current_pinpp
+      };
+      setCitizenFormVals((prevState) => ({ ...prevState, ...newValues }));
+      onFormUpdate(newValues);
+    }
+  }, [citizenData]);
+
+  useEffect(() => {
+    if (legalData?.company) {
+      let newData = {
+        ...legalformVals,
+        tin: legalData.company.tin || "",
+        name: legalData.company.name || "",
+        shortName: legalData.company.shortName || "",
+      };
+
+      setLegalformVals((prevState) => ({
+        ...prevState,
+        ...newData,
+      }));
+      onFormUpdate(newData);
+    }
+  }, [legalData]);
+
+  const placeholders = {
+    pnfl: "Введите ПИНФЛ",
+    inn: "Введите ИНН",
+    passport: "Серия и номер",
+  };
+
+  const isValidInput = () => {
+    if (searchType === "pnfl") return /^\d{14}$/.test(searchValue);
+    if (searchType === "inn") return /^\d{9}$/.test(searchValue);
+    if (searchType === "passport") return /^[A-Z]{3}\d{7}$/.test(searchValue);
+    return false;
+  };
+
+  return (
+    <div className="flex flex-col gap-4 p-4">
+      <div className="flex gap-4 items-center">
+        <FormControl sx={{ minWidth: 150 }}>
+          <InputLabel>Вид регистрации</InputLabel>
+          <Select
+            value={searchType}
+            onChange={(e) =>
+              setSearchType(e.target.value as "pnfl" | "inn" | "passport")
+            }
+          >
+            <MenuItem value="pnfl">
+              Идентификационный номер гражданина в Республике Узбекистан (ПИНФЛ)
+            </MenuItem>
+            <MenuItem value="inn">ИНН</MenuItem>
+            <MenuItem value="passport">Свидетельство о рождении</MenuItem>
+          </Select>
+        </FormControl>
+
+        <TextField
+          label="Данные"
+          variant="outlined"
+          placeholder={placeholders[searchType]}
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value.toUpperCase())}
+        />
+
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={!isValidInput() || citizenLoading || legalLoading}
+          onClick={handleSearch}
+        >
+          Поиск
+        </Button>
+      </div>
+
+      {citizenLoading || legalLoading ? <p>Ma'lumot yuklanmoqda...</p> : null}
+      {citizenError && (
+        <p>Xatolik yuz berdi (Fuqarolar): {JSON.stringify(citizenError)}</p>
+      )}
+      {legalError && (
+        <p>Xatolik yuz berdi (Yuridik): {JSON.stringify(legalError)}</p>
+      )}
+
+      {/* Formga avtomatik to‘ldirish */}
+      {searchType === "pnfl" && <CitizenForm formValues={citizenFormVals} />}
+      {searchType === "inn" && <LegalForm formValues={legalformVals} />}
+    </div>
+  );
+};
